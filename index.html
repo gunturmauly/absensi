@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Absensi Profesional</title>
+    <style>
+        /* Styling global */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        h1, h2 {
+            background-color: #007bff;
+            color: #fff;
+            padding: 15px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .form-container, .admin-container {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .tabel-container {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tabel-title {
+            margin: 20px 0 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+  <div class="container">
+        <h1>Form Absensi</h1>
+        <div class="form-container">
+            <div class="form-group">
+                <label for="nama">Nama:</label>
+                <input type="text" id="nama" required>
+            </div>
+            <div class="form-group">
+                <label>Jenis Kelamin:</label>
+                <input type="radio" id="pria" name="gender" value="Pria" checked> Pria
+                <input type="radio" id="wanita" name="gender" value="Wanita"> Wanita
+            </div>
+            <div class="form-group">
+                <label for="bagian">Bagian:</label>
+                <select id="bagian">
+                    <option value="Manajemen">Manajemen</option>
+                    <option value="Warehouse">Warehouse</option>
+                    <option value="Injection Shift 1">Injection Shift 1</option>
+                    <option value="Injection Shift 2">Injection Shift 2</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Security">Security</option>
+                    <option value="PKL">PKL</option>
+                    <option value="Helper">Helper</option>
+                </select>
+            </div>
+            <button class="btn" onclick="absen()">Absen</button>
+        </div>
+
+        <h2>Login Admin</h2>
+        <div class="admin-container">
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password Admin">
+                <button class="btn" onclick="login()">Login</button>
+            </div>
+        </div>
+
+        <div id="tabel-absensi" class="tabel-container hidden">
+            <h2>Data Absensi</h2>
+            <button class="btn" onclick="hapusAbsensi()">Hapus Semua Data Absensi</button>
+            <div id="tabel-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let absensiData = JSON.parse(localStorage.getItem('absensiData')) || [];
+
+        function absen() {
+            const nama = document.getElementById('nama').value;
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const bagian = document.getElementById('bagian').value;
+            const tanggal = new Date().toLocaleDateString();
+            const waktu = new Date().toLocaleTimeString();
+
+            if (nama) {
+                absensiData.push({ nama, gender, bagian, tanggal, waktu });
+                localStorage.setItem('absensiData', JSON.stringify(absensiData));
+                alert('Absensi berhasil disimpan!');
+                document.getElementById('nama').value = '';
+            } else {
+                alert('Nama tidak boleh kosong!');
+            }
+        }
+
+        function login() {
+            const password = document.getElementById('password').value;
+            if (password === 'admin123') {
+                document.getElementById('tabel-absensi').classList.remove('hidden');
+                renderTabelAbsensi();
+            } else {
+                alert('Password salah!');
+            }
+        }
+
+        function renderTabelAbsensi() {
+            const tabelContainer = document.getElementById('tabel-container');
+            tabelContainer.innerHTML = '';
+
+            const bagianMap = {};
+
+            absensiData.forEach((data) => {
+                if (!bagianMap[data.bagian]) {
+                    bagianMap[data.bagian] = [];
+                }
+                bagianMap[data.bagian].push(data);
+            });
+
+            for (const bagian in bagianMap) {
+                const tabel = document.createElement('table');
+                tabel.border = '1';
+                tabel.style.marginBottom = '20px';
+                const header = tabel.createTHead();
+                const row = header.insertRow(0);
+                row.insertCell(0).innerText = 'Nama';
+                row.insertCell(1).innerText = 'Jenis Kelamin';
+                row.insertCell(2).innerText = 'Tanggal';
+                row.insertCell(3).innerText = 'Waktu';
+
+                const body = tabel.createTBody();
+                bagianMap[bagian].forEach((data) => {
+                    const row = body.insertRow();
+                    row.insertCell(0).innerText = data.nama;
+                    row.insertCell(1).innerText = data.gender;
+                    row.insertCell(2).innerText = data.tanggal;
+                    row.insertCell(3).innerText = data.waktu;
+                });
+
+                const bagianTitle = document.createElement('div');
+                bagianTitle.className = 'tabel-title';
+                bagianTitle.innerText = `Bagian: ${bagian}`;
+                tabelContainer.appendChild(bagianTitle);
+                tabelContainer.appendChild(tabel);
+            }
+        }
+
+        function hapusAbsensi() {
+            if (confirm('Apakah kamu yakin ingin menghapus semua data absensi?')) {
+                absensiData = [];
+                localStorage.removeItem('absensiData');
+                renderTabelAbsensi();
+                alert('Semua data absensi telah dihapus!');
+            }
+        }
+
+        window.onload = function() {
+            if (absensiData.length > 0) {
+                renderTabelAbsensi();
+            }
+        };
+    </script>
+</body>
+</html>
